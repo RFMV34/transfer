@@ -1,0 +1,412 @@
+Index: src/app/app.component.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/app/app.component.ts b/src/app/app.component.ts
+--- a/src/app/app.component.ts	(revision c579f2d3e1169c6235123df5f819e127c0cbc334)
++++ b/src/app/app.component.ts	(date 1655905128985)
+@@ -1,4 +1,5 @@
+ import { Component } from '@angular/core';
++import {EditorConfig, ST_BUTTONS} from 'ngx-simple-text-editor';
+ 
+ @Component({
+   selector: 'app-root',
+@@ -7,4 +8,8 @@
+ })
+ export class AppComponent {
+   content = '';
++  config: EditorConfig = {
++    placeholder: 'Type something...',
++    buttons: ST_BUTTONS,
++  };
+ }
+Index: projects/ngx-simple-text-editor/src/public-api.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/public-api.ts b/projects/ngx-simple-text-editor/src/public-api.ts
+--- a/projects/ngx-simple-text-editor/src/public-api.ts	(revision c579f2d3e1169c6235123df5f819e127c0cbc334)
++++ b/projects/ngx-simple-text-editor/src/public-api.ts	(date 1655904394648)
+@@ -12,3 +12,5 @@
+ export * from './lib/models/exec-command';
+ export * from './lib/constants/editor-buttons';
+ export * from './lib/models/button';
++export * from './lib/models/config';
++
+Index: src/app/app.component.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/app/app.component.html b/src/app/app.component.html
+--- a/src/app/app.component.html	(revision c579f2d3e1169c6235123df5f819e127c0cbc334)
++++ b/src/app/app.component.html	(date 1655904559496)
+@@ -23,7 +23,7 @@
+         Example
+       </div>
+       <div>
+-        <st-editor [(ngModel)]="content" placeholder="Type something..."></st-editor>
++        <st-editor [(ngModel)]="content" [config]="config" [disabled]="content.length > 100"></st-editor>
+         <br>
+         <article class="message">
+           <div class="message-header">
+Index: projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts b/projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts
+--- a/projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts	(revision c579f2d3e1169c6235123df5f819e127c0cbc334)
++++ b/projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts	(date 1655909561463)
+@@ -1,43 +1,88 @@
+ import {ExecCommand} from '../models/exec-command';
+-import {ToolbarItem, ToolbarItemType} from '../models/button';
++import {
++  EditorButton,
++  EditorColor,
++  EditorInput,
++  EditorSelect,
++  Separator,
++  ToolbarItem,
++  ToolbarItemType
++} from '../models/button';
+ 
+-export const ST_BUTTONS: ToolbarItem[] = [
+-  {type: ToolbarItemType.Button, command: ExecCommand.undo, icon: 'fas fa-undo', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.redo, icon: 'fas fa-redo', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.removeFormat, icon: 'fas fa-remove-format', state: false},
+-  {type: ToolbarItemType.Separator},
+-  {type: ToolbarItemType.Button, command: ExecCommand.bold, icon: 'fas fa-bold', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.italic, icon: 'fas fa-italic', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.underline, icon: 'fas fa-underline', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.strikeThrough, icon: 'fas fa-strikethrough', state: false},
+-  {type: ToolbarItemType.Separator},
+-  {type: ToolbarItemType.Button, command: ExecCommand.justifyLeft, icon: 'fas fa-align-left', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.justifyCenter, icon: 'fas fa-align-center', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.justifyRight, icon: 'fas fa-align-right', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.justifyFull, icon: 'fas fa-align-justify', state: false},
+-  {type: ToolbarItemType.Separator},
+-  {type: ToolbarItemType.Button, command: ExecCommand.insertOrderedList, icon: 'fas fa-list-ol', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.insertUnorderedList, icon: 'fas fa-list-ul', state: false},
+-  {type: ToolbarItemType.Separator},
+-  {type: ToolbarItemType.Button, command: ExecCommand.indent, icon: 'fas fa-indent', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.outdent, icon: 'fas fa-outdent', state: false},
+-  {type: ToolbarItemType.Separator},
+-  {type: ToolbarItemType.Button, command: ExecCommand.subscript, icon: 'fas fa-subscript', state: false},
+-  {type: ToolbarItemType.Button, command: ExecCommand.superscript, icon: 'fas fa-superscript', state: false},
+-  {type: ToolbarItemType.Separator},
+-  {
+-    type: ToolbarItemType.Select, command: ExecCommand.fontSize, state: 3, items: [
+-      {value: 1, label: '1'},
+-      {value: 2, label: '2'},
+-      {value: 3, label: '3'},
+-      {value: 4, label: '4'},
+-      {value: 5, label: '5'},
+-      {value: 6, label: '6'},
+-      {value: 7, label: '7'},
+-    ]
+-  },
+-  {type: ToolbarItemType.Input, command: ExecCommand.createLink, icon: 'fas fa-link', text: 'Create link'},
+-  {type: ToolbarItemType.Button, command: ExecCommand.unlink, icon: 'fas fa-unlink', state: ''},
+-  {type: ToolbarItemType.Separator},
+-  {type: ToolbarItemType.Color, command: ExecCommand.foreColor, icon: 'fas fa-palette', state: 'rgb(0, 0, 0)'},
++export const UNDO_BUTTON: EditorButton = {type: ToolbarItemType.Button, command: ExecCommand.undo, icon: 'fas fa-undo'};
++export const REDO_BUTTON: EditorButton = {type: ToolbarItemType.Button, command: ExecCommand.redo, icon: 'fas fa-redo'};
++export const REMOVE_FORMAT_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.removeFormat, icon: 'fas fa-remove-format'};
++export const SEPARATOR: Separator = {type: ToolbarItemType.Separator};
++export const BOLD_BUTTON: EditorButton = {type: ToolbarItemType.Button, command: ExecCommand.bold, icon: 'fas fa-bold'};
++export const ITALIC_BUTTON: EditorButton = {type: ToolbarItemType.Button, command: ExecCommand.italic, icon: 'fas fa-italic'};
++export const UNDERLINE_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.underline, icon: 'fas fa-underline'};
++export const STRIKE_THROUGH_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.strikeThrough, icon: 'fas fa-strikethrough'};
++export const JUSTIFY_LEFT_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.justifyLeft, icon: 'fas fa-align-left'};
++export const JUSTIFY_CENTER_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.justifyCenter, icon: 'fas fa-align-center'};
++export const JUSTIFY_RIGHT_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.justifyRight, icon: 'fas fa-align-right'};
++export const JUSTIFY_FULL_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.justifyFull, icon: 'fas fa-align-justify'};
++export const ORDERED_LIST_BUTTON: EditorButton =
++    {type: ToolbarItemType.Button, command: ExecCommand.insertOrderedList, icon: 'fas fa-list-ol'};
++export const UNORDERED_LIST_BUTTON: EditorButton =
++    {type: ToolbarItemType.Button, command: ExecCommand.insertUnorderedList, icon: 'fas fa-list-ul'};
++export const INDENT_BUTTON: EditorButton = {type: ToolbarItemType.Button, command: ExecCommand.indent, icon: 'fas fa-indent'};
++export const OUTDENT_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.outdent, icon: 'fas fa-outdent'};
++export const SUBSCRIPT_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.subscript, icon: 'fas fa-subscript'};
++export const SUPERSCRIPT_BUTTON: EditorButton =
++  {type: ToolbarItemType.Button, command: ExecCommand.superscript, icon: 'fas fa-superscript'};
++export const FONT_SIZE_SELECT: EditorSelect = {
++  type: ToolbarItemType.Select, command: ExecCommand.fontSize, items: [
++    {value: 1, label: '1'},
++    {value: 2, label: '2'},
++    {value: 3, label: '3'},
++    {value: 4, label: '4'},
++    {value: 5, label: '5'},
++    {value: 6, label: '6'},
++    {value: 7, label: '7'},
++  ]
++};
++export const LINK_INPUT: EditorInput =
++  {type: ToolbarItemType.Input, command: ExecCommand.createLink, icon: 'fas fa-link', text: 'Create link'};
++export const UNLINK_BUTTON: EditorButton = {type: ToolbarItemType.Button, command: ExecCommand.unlink, icon: 'fas fa-unlink'};
++export const FORE_COLOR: EditorColor =
++  {type: ToolbarItemType.Color, command: ExecCommand.foreColor, icon: 'fas fa-palette'};
++
++export const ST_BUTTONS: ToolbarItem[] = [
++  UNDO_BUTTON,
++  REDO_BUTTON,
++  REMOVE_FORMAT_BUTTON,
++  SEPARATOR,
++  BOLD_BUTTON,
++  ITALIC_BUTTON,
++  UNDERLINE_BUTTON,
++  STRIKE_THROUGH_BUTTON,
++  SEPARATOR,
++  JUSTIFY_LEFT_BUTTON,
++  JUSTIFY_CENTER_BUTTON,
++  JUSTIFY_RIGHT_BUTTON,
++  JUSTIFY_FULL_BUTTON,
++  SEPARATOR,
++  ORDERED_LIST_BUTTON,
++  UNORDERED_LIST_BUTTON,
++  SEPARATOR,
++  INDENT_BUTTON,
++  OUTDENT_BUTTON,
++  SEPARATOR,
++  SUBSCRIPT_BUTTON,
++  SUPERSCRIPT_BUTTON,
++  SEPARATOR,
++  FONT_SIZE_SELECT,
++  LINK_INPUT,
++  UNLINK_BUTTON,
++  SEPARATOR,
++  FORE_COLOR,
+ ];
+Index: projects/ngx-simple-text-editor/src/lib/services/command.service.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/services/command.service.ts b/projects/ngx-simple-text-editor/src/lib/services/command.service.ts
+--- a/projects/ngx-simple-text-editor/src/lib/services/command.service.ts	(revision c579f2d3e1169c6235123df5f819e127c0cbc334)
++++ b/projects/ngx-simple-text-editor/src/lib/services/command.service.ts	(date 1655910821965)
+@@ -1,5 +1,13 @@
+ import {Inject, Injectable} from '@angular/core';
+-import {EditorColor, EditorInput, EditorSelect, Separator, ToolbarItem, ToolbarItemType} from '../models/button';
++import {
++  EditorButton,
++  EditorColor,
++  EditorInput,
++  EditorSelect,
++  Separator,
++  ToolbarItem,
++  ToolbarItemType
++} from '../models/button';
+ import {DOCUMENT} from '@angular/common';
+ 
+ @Injectable()
+@@ -11,17 +19,19 @@
+     return item.type === ToolbarItemType.Select || item.type === ToolbarItemType.Color;
+   }
+ 
+-  private isCommandWithoutValueOrState(item: ToolbarItem): item is (Separator | EditorInput) {
+-    return item.type === ToolbarItemType.Separator || item.type === ToolbarItemType.Input;
++  private isCommandWithState(item: ToolbarItem): item is EditorButton {
++    return item.type === ToolbarItemType.Button;
+   }
+ 
+-  queryCommandState(buttons: ToolbarItem[]): ToolbarItem[] {
+-    return buttons.map(item => this.isCommandWithoutValueOrState(item) ? item : ({
+-      ...item,
+-      state: this.isCommandWithValue(item) ?
+-        this.document.queryCommandValue(String(item.command)) :
+-        this.document.queryCommandState(String(item.command)),
+-    })) as ToolbarItem[];
++  getQueryCommandState(buttons: ToolbarItem[]): {[key: string]: string | number | boolean} {
++    return buttons
++      .filter(item => this.isCommandWithValue(item) || this.isCommandWithState(item))
++      .reduce((acc, curr: (EditorSelect | EditorColor | EditorButton)) => ({
++        ...acc,
++        [curr.command]: this.isCommandWithValue(curr) ?
++          this.document.queryCommandValue(String(curr.command)) :
++          this.document.queryCommandState(String(curr.command)),
++      }), {});
+   }
+ 
+   execCommand(command: string, value?: any): void {
+Index: projects/ngx-simple-text-editor/src/lib/models/button.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/models/button.ts b/projects/ngx-simple-text-editor/src/lib/models/button.ts
+--- a/projects/ngx-simple-text-editor/src/lib/models/button.ts	(revision c579f2d3e1169c6235123df5f819e127c0cbc334)
++++ b/projects/ngx-simple-text-editor/src/lib/models/button.ts	(date 1655909561448)
+@@ -11,14 +11,12 @@
+ export interface EditorButton extends ToolbarBaseItem {
+   type: ToolbarItemType.Button;
+   command: ExecCommand;
+-  state: boolean | number | string;
+   icon: string;
+ }
+ 
+ export interface EditorColor extends ToolbarBaseItem {
+   type: ToolbarItemType.Color;
+   command: ExecCommand;
+-  state: boolean | number | string;
+   icon: string;
+ }
+ 
+@@ -32,7 +30,6 @@
+ export interface EditorSelect extends ToolbarBaseItem {
+   type: ToolbarItemType.Select;
+   command: ExecCommand;
+-  state: boolean | number | string;
+   items: { value: number | string, label: string }[];
+ }
+ 
+Index: projects/ngx-simple-text-editor/src/lib/models/config.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/models/config.ts b/projects/ngx-simple-text-editor/src/lib/models/config.ts
+new file mode 100644
+--- /dev/null	(date 1655904366910)
++++ b/projects/ngx-simple-text-editor/src/lib/models/config.ts	(date 1655904366910)
+@@ -0,0 +1,6 @@
++import {ToolbarItem} from './button';
++
++export interface EditorConfig {
++  buttons?: ToolbarItem[];
++  placeholder?: string;
++}
+Index: projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.ts b/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.ts
+--- a/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.ts	(revision c579f2d3e1169c6235123df5f819e127c0cbc334)
++++ b/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.ts	(date 1655909784141)
+@@ -2,8 +2,14 @@
+ import {DOCUMENT} from '@angular/common';
+ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+ import {ST_BUTTONS} from '../../constants/editor-buttons';
+-import {ToolbarItem, ToolbarItemType} from '../../models/button';
++import {ToolbarItemType} from '../../models/button';
+ import {CommandService} from '../../services/command.service';
++import {EditorConfig} from '../../models/config';
++
++const DEFAULT_CONFIG: EditorConfig = {
++  placeholder: '',
++  buttons: ST_BUTTONS,
++};
+ 
+ @Component({
+   selector: 'st-editor',
+@@ -16,12 +22,17 @@
+ })
+ export class EditorComponent implements ControlValueAccessor {
+ 
+-  @Input() buttons = ST_BUTTONS;
+-  @Input() placeholder = '';
++  @Input() set config(val: EditorConfig) {
++    this._config = {...DEFAULT_CONFIG, ...(val || {})};
++  }
++  _config: EditorConfig;
+   @ViewChild('contentEditable') contentEditable: ElementRef;
+   content = '';
+   toolbarItemType = ToolbarItemType;
++  isDisabled = false;
+   onChangeFn: (val: string) => void;
++  onTouchedFn: () => void;
++  queryCommandState: {[key: string]: string | number | boolean} = {};
+ 
+   constructor(@Inject(DOCUMENT) private readonly document: any,
+               private readonly commandService: CommandService) { }
+@@ -34,12 +45,12 @@
+     this.onChangeFn = fn;
+   }
+ 
+-  registerOnTouched(fn: any): void {
+-    // throw new Error('Method not implemented.');
++  registerOnTouched(fn: () => void): void {
++    this.onTouchedFn = fn;
+   }
+ 
+   setDisabledState?(isDisabled: boolean): void {
+-    // throw new Error('Method not implemented.');
++    this.isDisabled = isDisabled;
+   }
+ 
+   domModify(): void {
+@@ -51,11 +62,11 @@
+   execCommand(command: string, value?: any): void {
+     this.contentEditable.nativeElement.focus();
+     this.commandService.execCommand(command, value);
+-    this.queryCommandState();
++    this.fetchQueryCommandState();
+   }
+ 
+-  queryCommandState(): void {
+-    this.buttons = this.commandService.queryCommandState(this.buttons);
++  fetchQueryCommandState(): void {
++    this.queryCommandState = this.commandService.getQueryCommandState(this.config.buttons);
+   }
+ 
+   trackBy(_, item: any): string {
+Index: projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.scss
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.scss b/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.scss
+--- a/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.scss	(revision c579f2d3e1169c6235123df5f819e127c0cbc334)
++++ b/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.scss	(date 1655903513071)
+@@ -2,6 +2,11 @@
+ 
+ .st-editor-container {
+   position: relative;
++
++  &.disabled {
++    pointer-events: none;
++    opacity: 0.5;
++  }
+ }
+ 
+ .st-area {
+Index: projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.html b/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.html
+--- a/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.html	(revision c579f2d3e1169c6235123df5f819e127c0cbc334)
++++ b/projects/ngx-simple-text-editor/src/lib/components/editor/editor.component.html	(date 1655909678272)
+@@ -1,6 +1,6 @@
+-<div class="st-editor-container">
++<div class="st-editor-container" [class.disabled]="isDisabled">
+   <div class="st-toolbar" tabIndex="0">
+-    <ng-container *ngFor="let item of buttons; trackBy:trackBy" [ngSwitch]="item.type">
++    <ng-container *ngFor="let item of _config.buttons; trackBy:trackBy" [ngSwitch]="item.type">
+       <st-separator *ngSwitchCase="toolbarItemType.Separator"></st-separator>
+       <st-button *ngIf="item.type === toolbarItemType.Button"
+                                  [button]="item"
+@@ -20,6 +20,7 @@
+       </st-input>
+     </ng-container>
+   </div>
+-  <div #contentEditable contenteditable="true" class="st-area"
+-       [attr.data-placeholder]="placeholder" (stDomModify)="domModify()" (stSelectionChange)="queryCommandState()"></div>
++  <div #contentEditable class="st-area"
++       [attr.data-placeholder]="_config.placeholder" [attr.contenteditable]="!isDisabled"
++       (stDomModify)="domModify()" (stSelectionChange)="fetchQueryCommandState()" (blur)="onTouchedFn()"></div>
+ </div>
