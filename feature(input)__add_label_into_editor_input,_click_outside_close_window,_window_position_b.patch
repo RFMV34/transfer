@@ -1,0 +1,274 @@
+Index: projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.ts b/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.ts
+--- a/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.ts	(revision 31a17e50d37d47ade061ea0a7a80b25438622e2b)
++++ b/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.ts	(date 1666270358704)
+@@ -1,7 +1,10 @@
+-import {Component, EventEmitter, Output, Input} from '@angular/core';
++import {Component, EventEmitter, Output, Input, HostListener, ElementRef, ViewChild} from '@angular/core';
+ import {EditorInput} from '../../models/button';
+ import {ExecCommand} from '../../models/exec-command';
+ 
++const APPROX_WIDTH_THRESHOLD = 278;
++const MARGIN_OFFSET = -150;
++
+ @Component({
+   selector: 'st-input',
+   templateUrl: './editor-input.component.html',
+@@ -12,19 +15,46 @@
+   @Input() button: EditorInput;
+   @Input() state: string | number | boolean;
+   @Output() command = new EventEmitter<{command: ExecCommand, value: string}>();
++  @ViewChild('input', {static: false}) inputElement: ElementRef;
++  @ViewChild('window', {static: false}) windowElement: ElementRef;
+   showInputWindow = false;
+   value = '';
++  margin = 0; // workaround fox window width computing
++  opacity = 0; // workaround fox window width computing
++
++  constructor(private readonly element: ElementRef) {
++  }
+ 
+   onCommand(): void {
+     if (this.value) {
+-      this.toggleInputVisibility();
++      this.closeInputWindow();
+       this.command.emit({command: this.button.command, value: this.value});
+       this.value = '';
+     }
+   }
+ 
+-  toggleInputVisibility(): void {
+-    this.showInputWindow = !this.showInputWindow;
++  openInputWindow(): void {
++    this.showInputWindow = true;
++    console.log(this.windowElement);
++    setTimeout(() => {
++      console.log(this.windowElement);
++      this.margin = this.windowElement.nativeElement.getBoundingClientRect().width < APPROX_WIDTH_THRESHOLD ? MARGIN_OFFSET : 0;
++      this.opacity = 1;
++      this.inputElement.nativeElement.focus();
++    });
++  }
++
++  closeInputWindow(): void {
++    this.showInputWindow = false;
++    this.margin = 0;
++    this.opacity = 0;
++  }
++
++  @HostListener('document:click', ['$event'])
++  outsideClick($event: MouseEvent): void {
++    if (!this.element.nativeElement.contains($event.target) && this.showInputWindow) {
++      this.closeInputWindow();
++    }
+   }
+ 
+ }
+Index: projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts b/projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts
+--- a/projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts	(revision 31a17e50d37d47ade061ea0a7a80b25438622e2b)
++++ b/projects/ngx-simple-text-editor/src/lib/constants/editor-buttons.ts	(date 1665757834828)
+@@ -52,12 +52,12 @@
+   ]
+ };
+ export const LINK_INPUT: EditorInput =
+-  {type: ToolbarItemType.Input, command: ExecCommand.createLink, icon: 'fas fa-link', text: 'Create link', title: 'create link'};
++  {type: ToolbarItemType.Input, command: ExecCommand.createLink, icon: 'fas fa-link', text: 'Create link', title: 'create link', label: 'Create link'};
+ export const UNLINK_BUTTON: EditorButton = {type: ToolbarItemType.Button, command: ExecCommand.unlink, icon: 'fas fa-unlink', title: 'unlink'};
+ export const FORE_COLOR: EditorColor =
+   {type: ToolbarItemType.Color, command: ExecCommand.foreColor, icon: 'fas fa-palette', title: 'font color'};
+ export const IMAGE_INPUT: EditorInput =
+-  {type: ToolbarItemType.Input, command: ExecCommand.insertImage, icon: 'fas fa-image', text: 'Add image', title: 'add image'};
++  {type: ToolbarItemType.Input, command: ExecCommand.insertImage, icon: 'fas fa-image', text: 'Add image', title: 'add image', label: 'Create image from link'};
+ export const CUSTOM: EditorDropdown = {
+   type: ToolbarItemType.Dropdown, label: 'Custom actions', title: 'test custom', items: [
+     {command: ExecCommand.insertHTML, value: '<b>Custom<b>', label: 'Custom Bold'},
+Index: projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.spec.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.spec.ts b/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.spec.ts
+--- a/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.spec.ts	(revision 31a17e50d37d47ade061ea0a7a80b25438622e2b)
++++ b/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.spec.ts	(date 1666270982996)
+@@ -2,6 +2,7 @@
+ import { EditorInputComponent } from './editor-input.component';
+ import {ToolbarItemType} from '../../models/button';
+ import {ExecCommand} from '../../models/exec-command';
++import {EditorButtonComponent} from '../editor-button/editor-button.component';
+ 
+ describe('EditorInputComponent', () => {
+   let component: EditorInputComponent;
+@@ -9,7 +10,7 @@
+ 
+   beforeEach(async(() => {
+     TestBed.configureTestingModule({
+-      declarations: [ EditorInputComponent ]
++      declarations: [ EditorInputComponent, EditorButtonComponent ]
+     })
+     .compileComponents();
+   }));
+@@ -27,11 +28,17 @@
+     expect(component).toBeTruthy();
+   });
+ 
+-  it('should show toggle input window visibility', () => {
+-    component.toggleInputVisibility();
++  it('should show toggle input window visibility', (done) => {
++    component.openInputWindow();
++    fixture.detectChanges();
+     expect(component.showInputWindow).toBeTrue();
+-    component.toggleInputVisibility();
+-    expect(component.showInputWindow).toBeFalse();
++    setTimeout(() => {
++      expect(component.opacity).toBe(1);
++      component.closeInputWindow();
++      expect(component.showInputWindow).toBeFalse();
++      expect(component.opacity).toBe(0);
++      done();
++    });
+   });
+ 
+   it('should emit command when value is defined', () => {
+@@ -50,8 +57,6 @@
+   });
+ 
+   it('should not emit command when value is undefined', () => {
+-    const command = ExecCommand.createLink;
+-    const value = 'www.example.com';
+     component.value = '';
+     component.showInputWindow = true;
+     component.command.emit = jasmine.createSpy('emit');
+@@ -64,15 +69,34 @@
+     expect(component.command.emit).not.toHaveBeenCalled();
+   });
+ 
+-  /*it('should emit command and prompt value', () => {
+-    const promptValue = 'www.example.com';
+-    const command = ExecCommand.createLink;
++  it('should close window when click outside', (done) => {
++    component.openInputWindow();
++    fixture.detectChanges();
++    setTimeout(() => {
++      component.outsideClick(jasmine.createSpyObj({}, {target: document}));
++      expect(component.showInputWindow).toBeFalse();
++      done();
++    });
++  });
+ 
+-    window.prompt = jasmine.createSpy('prompt').and.returnValue(promptValue);
+-    component.command.emit = jasmine.createSpy('emit');
+-    component.button = {type: ToolbarItemType.Input, command: ExecCommand.createLink, icon: 'link', text: 'Url'};
++  it('should NOT close window when click inside', (done) => {
++    component.openInputWindow();
++    fixture.detectChanges();
++    setTimeout(() => {
++      component.outsideClick(jasmine.createSpyObj({}, {target: component.inputElement.nativeElement}));
++      expect(component.showInputWindow).toBeTrue();
++      done();
++    });
++  });
+ 
+-    component.onCommand(command);
+-    expect(component.command.emit).toHaveBeenCalledWith({command, value: promptValue});
+-  });*/
++  it('should calculate proper position based on width', (done) => {
++    component.openInputWindow();
++    fixture.detectChanges();
++    component.windowElement.nativeElement.style.width = '100px';
++    setTimeout(() => {
++      expect(component.margin).toBe(-150);
++      done();
++    });
++  });
++
+ });
+Index: projects/ngx-simple-text-editor/src/lib/models/button.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/models/button.ts b/projects/ngx-simple-text-editor/src/lib/models/button.ts
+--- a/projects/ngx-simple-text-editor/src/lib/models/button.ts	(revision 31a17e50d37d47ade061ea0a7a80b25438622e2b)
++++ b/projects/ngx-simple-text-editor/src/lib/models/button.ts	(date 1665757709117)
+@@ -29,6 +29,7 @@
+   icon: string;
+   text: string;
+   title?: string;
++  label?: string;
+ }
+ 
+ export interface EditorSelect extends ToolbarBaseItem {
+Index: projects/ngx-simple-text-editor/src/lib/components/editor-color-picker/editor-color-picker.component.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/components/editor-color-picker/editor-color-picker.component.html b/projects/ngx-simple-text-editor/src/lib/components/editor-color-picker/editor-color-picker.component.html
+--- a/projects/ngx-simple-text-editor/src/lib/components/editor-color-picker/editor-color-picker.component.html	(revision 31a17e50d37d47ade061ea0a7a80b25438622e2b)
++++ b/projects/ngx-simple-text-editor/src/lib/components/editor-color-picker/editor-color-picker.component.html	(date 1665758157854)
+@@ -1,6 +1,6 @@
+ <button class="st-button st-toolbar-item" [title]="button?.title || ''" (click)="colorPicker.click()">
+   {{rgbStringToHex(state)}}
+-  <input #colorPicker class="st-color-picker" type="color" [ngModel]="rgbStringToHex(state)"
++  <input #colorPicker class="st-color-picker" type="color" [ngModel]="rgbStringToHex(state)" tabindex="-1"
+          (change)="onCommand(button?.command, $event.target.value)" onmousedown='return false;' onselectstart='return false;'>
+   <i [class]="button?.icon" [style.color]="state"></i>
+ </button>
+Index: projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.scss
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.scss b/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.scss
+--- a/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.scss	(revision 31a17e50d37d47ade061ea0a7a80b25438622e2b)
++++ b/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.scss	(date 1665757584939)
+@@ -1,7 +1,10 @@
+ @import '../../styles/base';
+ 
++$labelFontSize: 14px;
++
+ .st-input-window {
+   display: flex;
++  flex-direction: column;
+   background-color: white;
+   position: absolute;
+   padding: 10px;
+@@ -27,3 +30,8 @@
+   border-top-left-radius: 0;
+   border: 1px solid $borderColor;
+ }
++
++.st-input-label {
++  font-size: $labelFontSize;
++  font-weight: bold;
++}
+Index: projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.html b/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.html
+--- a/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.html	(revision 31a17e50d37d47ade061ea0a7a80b25438622e2b)
++++ b/projects/ngx-simple-text-editor/src/lib/components/editor-input/editor-input.component.html	(date 1666107009671)
+@@ -1,5 +1,8 @@
+-<st-button [button]="button" [state]="state" (command)="toggleInputVisibility()"></st-button>
+-<div *ngIf="showInputWindow" class="st-input-window" (mouseleave)="toggleInputVisibility()">
+-  <input class="st-input-input" type="text" [(ngModel)]="value">
+-  <button class="st-input-button" (click)="onCommand()">Confirm</button>
++<st-button [button]="button" [state]="state" (command)="openInputWindow()"></st-button>
++<div *ngIf="showInputWindow" #window class="st-input-window" (keyup.escape)="closeInputWindow()" [style.margin-left.px]="margin" [style.opacity]="opacity">
++  <label *ngIf="button?.label" class="st-input-label">{{button?.label}}</label>
++  <div>
++    <input #input class="st-input-input" type="text" [title]="button?.label" [(ngModel)]="value">
++    <button class="st-input-button" (click)="onCommand()">Confirm</button>
++  </div>
+ </div>
